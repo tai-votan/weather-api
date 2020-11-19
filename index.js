@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 6600;
 
 app.get('/', (req, res) => {
   const { email, password } = req.query;
