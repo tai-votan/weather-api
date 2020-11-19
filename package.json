@@ -8,7 +8,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "author": "Tài Võ",
+  "author": "taivotan",
   "license": "ISC",
   "dependencies": {
     "express": "4.17.1"
