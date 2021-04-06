@@ -1,81 +1,60 @@
-// const express = require('express');
-// const cors = require('cors');
-//
-// const app = express();
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
+const app = express();
 
-const https = require('https');
+const { API_WEATHER_URL, PORT } = require("./config");
 
-const port = process.env.PORT || 8080;
-//
-// app.use(cors())
-//
-// app.use(function (req, res, next) {
-//
-//   // Website you wish to allow to connect
-//   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8888');
-//
-//   // Request methods you wish to allow
-//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-//
-//   // Request headers you wish to allow
-//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-//
-//   // Set to true if you need the website to include cookies in the requests sent
-//   // to the API (e.g. in case you use sessions)
-//   res.setHeader('Access-Control-Allow-Credentials', true);
-//
-//   // Pass to next layer of middleware
-//   next();
-// });
-//
-//
-//
-// app.get('/', (req, res) => {
-//   const { email, password } = req.query;
-//   res.json({ email, password, author: "Jane Doe", })
-// })
-//
-// app.listen(port, () => {
-//   console.log(`Example app listening at http://localhost:${port}`)
-// })
+const port = process.env.PORT || PORT;
+app.use(cors());
 
+app.get("/api/location/search/:query", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Credentials", true);
+  const { query } = req.params;
 
-var express = require('express')
-var cors = require('cors')
-var app = express()
-
-app.use(cors())
-
-app.get('/api', (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:8000");
-  res.header('Access-Control-Allow-Credentials', true);
-  const { query, path, id } = req.query;
-
-  if (!query && !id) {
-    res.json([])
-  }
-  let queryUrl = `${path}/?query=${query}`;
-  if (id) {
-    queryUrl = `${path}/${id}/`
+  if (!query) {
+    res.json([]);
   }
 
-  const requestUrl = `https://www.metaweather.com/api/${queryUrl}`;
-  https.get(requestUrl, (resp) => {
-    let data = '';
-    // A chunk of data has been received.
-    resp.on('data', (chunk) => {
-      data += chunk;
-    });
-    // The whole response has been received. Print out the result.
-    resp.on('end', () => {
-      res.json(JSON.parse(data))
-    });
+  const requestUrl = `${API_WEATHER_URL}/location/search/?query=${query}`;
 
-  }).on("error", (err) => {
-    console.log("Error: " + err.message);
-  });
-})
+  axios
+    .get(requestUrl)
+    .then(function (response) {
+      console.log('Function response.data, ==> params({ : response.data }) Line 25', {asas : response.data, requestUrl });
+      res.json(response.data);
+    })
+    .catch(function (error) {
+      res.json(error);
+    });
+});
+
+app.get("/api/location/get/:id/:limit", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Credentials", true);
+
+  const { id, limit = 10 } = req.params;
+
+  if (!id) {
+    res.json({
+      consolidated_weather: [],
+    });
+  }
+
+  const requestUrl = `${API_WEATHER_URL}/location/${id}`;
+
+  axios
+    .get(requestUrl)
+    .then(function (response) {
+      response.data.consolidated_weather.length = limit;
+      res.json(response.data);
+    })
+    .catch(function (error) {
+      res.json(error);
+    });
+});
 
 app.listen(port, function () {
-  console.log(`Example app listening at http://localhost:${port}`);
-})
+  console.log(`Backend middleware weather app listening at port ${port}`);
+});
